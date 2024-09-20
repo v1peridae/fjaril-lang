@@ -55,11 +55,13 @@
 
 ### ˖ ࣪⊹༘ Contributing
 
-All contributions are welcome! Whether you're fixing bugs, adding new features, or simply suggesting cool new ideas. There's no limit to how you can contribute everyone can help make Fjäril into something beautiful <3
+All contributions are welcome! Whether you're just fixing bugs, adding new features, or suggesting cool new ideas. There's no limit to how you can contribute & everyone is more than welcomed to help make Fjäril into something beautiful <3
 
 ### ࿐ᯓᡣ𐭩 License
 
-made with ♡ by v1peridae <br><br>
+Fjäril is open-source and released under the **MIT License**. This means you're free to use, modify, and distribute the language however you like, as long as you include the original copyright and license notice. Whether you're using it for personal projects or creating something for the community, Fjäril is here for you to enjoy and share! For more details, check out the full MIT License in the repository.
+
+<br><br>made with ♡ by v1peridae <br><br><br>
 ⠀⠀⠀⠀⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢴⣤⣄⠀⠀⠀⠀⠀⢀⣤⣶⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀
 ⢴⣾⣿⣿⣿⣏⣉⣉⣉⣛⣛⣻⣿⣶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠙⢷⠀⠀⠀⢠⡟⠀⠀⠀⠀⠀⠀⢀⣠⣤⣶⣾⣿⣛⣛⣋⣉⣉⣉⣿⣿⣿⣿⣶⠄
 ⠀⠙⢿⣿⣿⣿⡁⠀⠀⣉⡿⠋⠉⠉⠙⠛⠻⢿⣦⣄⠀⠀⠀⠀⠘⣇⠀⢀⡟⠀⠀⠀⠀⢀⣤⣾⠿⠛⠋⠉⠉⠉⠻⣏⡉⠀⠈⣹⣿⣿⣿⠟⠁⠀
