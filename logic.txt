@@ -1,17 +1,22 @@
-expr    : KEYWORD: VAR ID EQ expr
-        : term ((PLUS | MINUS) term)*
+expr            : KEYWORD: VAR ID EQ expr
+                : compare expr ((&& | || ) compare expr)*
+                
+compare expr    : math expr (==|<(=)|>(=) math expr)*
+                : NOT compare expr
+        
+math expr       : term ((PLUS | MINUS) term)*
 
-term    : factor ((MUL | DIV) factor)*
+term            : factor ((MUL | DIV) factor)*
 
-factor  : (PLUS | MINUS) factor
-        : power
+factor          : (PLUS | MINUS) factor
+                : power
 
-power   : nachos (POW factor)*
+power           : nachos (POW factor)*
 
-nachos  : INT | FLOAT | ID
-        : LPAREN expr RPAREN
+nachos          : INT | FLOAT | ID
+                : LPAREN expr RPAREN
 
-PLUS    : '+'
-MINUS   : '-'
-MUL     : '*'
-DIV     : '/'
+PLUS            : '+'
+MINUS           : '-'
+MUL             : '*'
+DIV             : '/'

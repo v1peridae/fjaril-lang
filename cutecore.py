@@ -1,6 +1,8 @@
 from string_with_arrows import string_with_arrows
 import string
 
+################################
+
 # Token types ✧˖°
 TT_INT = '✧ NUM ✧'
 TT_FLOAT = '★,KINDA_NUM★'
@@ -15,17 +17,33 @@ TT_POW = '✧ POWER ✧'
 TT_ID = '☆ ID ☆'
 TT_KEYWORD = '⧣₊˚ KEYWORD ⧣₊˚'
 TT_EQ = '𓂃★ EQUALS ★𓂃'
+TT_LT = '⧣₊˚ LESS_THAN ⧣₊˚'
+TT_GT = '⧣₊˚ GREATER_THAN ⧣₊˚'
+TT_LTE = '⧣₊˚ LESS_THAN_EQUAL ⧣₊˚'
+TT_GTE = '⧣₊˚ GREATER_THAN_EQUAL ⧣₊˚'
+TT_NE = '⧣₊˚ NOT_EQUAL ⧣₊˚'
+TT_EE = '⧣₊˚ DOUBLE_EQUAL ⧣₊˚'
+# - end of Token Types - #
+################################
 
-KEYWORDS = [
-    'var'
-]
+
+################################
+# ✿ KEYWORDS ✿
+KEYWORDS = ['var', '<33', '<3', '</3', 'if', 'elif',
+            'else', 'for', 'to', 'step', 'while', 'fun', 'then']
+################################
+
+
+################################
 # ✧･ﾟ: *✧･ﾟ:* Constants *:･ﾟ✧*:･ﾟ✧
 DIGITS = '0123456789'
 LETTERS = string.ascii_letters
 LETTERS_DIGITS = LETTERS + DIGITS
 # - end of const >.< - #
+################################
 
 
+################################
 # ｡ﾟ(ﾟ´ω`ﾟ)ﾟ｡ Error Classes ｡ﾟ(ﾟ´ω`ﾟ)ﾟ｡
 class Error:
     def __init__(self, pos_start, pos_end, error_name, details):
@@ -77,11 +95,11 @@ class RuntimeError(Error):
             pos = context.parent_entry_pos
             context = context.parent
         return '( ╹ -╹) \nTraceback (most recent call last):\n' + result
-
-
 # - end of errors :( - #
+################################
 
 
+################################
 # ✧˖°˖☆ Position Class ☆˖°˖✧
 class Position:
     def __init__(self, idx, ln, col, fn, ftxt):
@@ -102,8 +120,11 @@ class Position:
 
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
+# - end of Position Class - #
+################################
 
 
+################################
 # ♡♥ Token Class ♥♡
 class KawaiiToken:
     def __init__(self, type_, value=None, pos_start=None, pos_end=None):
@@ -128,10 +149,11 @@ class KawaiiToken:
             return f'✧･ﾟ: *✧･ﾟ:{self.type}:{self.value}:･ﾟ✧*:･ﾟ✧'
         return f'✧･ﾟ: *✧･ﾟ:{self.type}:･ﾟ✧*:･ﾟ✧'
 # - end of class KawaiiToken - #
+################################
 
-# ✿❀ Lexer Class ❀✿
 
-
+################################
+# ✿❀ Lexer Class ❀✿ #
 class CyuteLexer:
     def __init__(self, fn, text):
         self.fn = fn
@@ -174,8 +196,11 @@ class CyuteLexer:
                 tokens.append(KawaiiToken(TT_POW, pos_start=self.pos))
                 self.advance()
             elif self.current_char == '=':
-                tokens.append(KawaiiToken(TT_EQ, pos_start=self.pos))
-                self.advance()
+                tokens.append(self.make_equals())
+            elif self.current_char == '<':
+                tokens.append(self.make_less_than())
+            elif self.current_char == '>':
+                tokens.append(self.make_greater_than())
             elif self.current_char in LETTERS:
                 tokens.append(self.make_id())
             else:
@@ -185,6 +210,17 @@ class CyuteLexer:
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
         tokens.append(KawaiiToken(TT_EOF, pos_start=self.pos))
         return tokens, None
+
+    def make_equals(self):
+        tok_type = TT_EQ
+        pos_start = self.pos.copy()
+        self.advance()
+
+        if self.current_char == '=':
+            self.advance()
+            tok_type = TT_EE
+
+        return KawaiiToken(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_number(self):
         num_str = ''
@@ -216,9 +252,50 @@ class CyuteLexer:
 
         tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_ID
         return KawaiiToken(tok_type, id_str, pos_start, self.pos)
-# - end of Lexer ✧˖° - #
+
+    def make_not_equals(self):
+        pos_start = self.pos.copy()
+        self.advance()
+
+        if self.current_char == '>':
+            self.advance()
+            return KawaiiToken(TT_NE, pos_start=pos_start, pos_end=self.pos), None
+        self.advance()
+        return None, InvalidSyntaxError(pos_start, self.pos, "(ó﹏ò｡) I expected a '>' after '<'")
+
+    def make_equals(self):
+        tok_type = TT_EQ
+        pos_start = self.pos.copy()
+        self.advance()
+
+        if self.current_char == '=':
+            self.advance()
+            tok_type = TT_EE
+
+            return KawaiiToken(tok_type, pos_start=pos_start, pos_end=self.pos)
+
+    def make_less_than(self):
+        tok_type = TT_LT
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == '=':
+            self.advance()
+            tok_type = TT_LTE
+        return KawaiiToken(tok_type, pos_start=pos_start, pos_end=self.pos)
+
+    def make_greater_than(self):
+        tok_type = TT_GT
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == '=':
+            self.advance()
+            tok_type = TT_GTE
+        return KawaiiToken(tok_type, pos_start=pos_start, pos_end=self.pos)
+        # - end of Lexer ✧˖° - #
+################################
 
 
+################################
 # ʕ•ᴥ•ʔ Node Classes ʕ•ᴥ•ʔ
 class NumberNode:
     def __init__(self, tok):
@@ -266,9 +343,12 @@ class UnaryOpNode:
 
     def __repr__(self):
         return f'({self.op_tok}, {self.node})'
+# - end of Node Classes - #
+################################
 
 
-# (づ｡◕‿‿◕｡)づ Parser and ParseResult Classes
+################################
+# (づ｡◕‿‿◕｡)づ ParseResult
 class ParseResult:
     def __init__(self):
         self.error = None
@@ -292,8 +372,12 @@ class ParseResult:
         if not self.error or self.advance_count == 0:
             self.error = error
         return self
+# - end of ParseResult Class - #
+################################
 
 
+################################
+# ✿❀ Parser Class ❀✿
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -302,15 +386,20 @@ class Parser:
 
     def advance(self):
         self.tok_idx += 1
+        self.update_current_tok()
+
+    def update_current_tok(self):
         if self.tok_idx < len(self.tokens):
             self.current_tok = self.tokens[self.tok_idx]
-        return self.current_tok
+        else:
+            self.current_tok = None
 
     def parse(self):
         res = self.expr()
-        if not res.error and self.current_tok.type is not TT_EOF:
+        if not res.error and self.current_tok and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end, "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
         return res
 
     def nachos(self):
@@ -364,6 +453,27 @@ class Parser:
     def term(self):
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
+    def math_expr(self):
+        return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
+
+    def compare_expr(self):
+        res = ParseResult()
+        if self.current_tok.matches(TT_KEYWORD, '</3'):
+            op_tok = self.current_tok
+            res.register_advancement()
+            self.advance()
+            node = res.register(self.compare_expr())
+            if res.error:
+                return res
+            return res.success(UnaryOpNode(op_tok, node))
+        node = res.register(self.bin_op(
+            self.math_expr, (TT_LT, TT_GT, TT_LTE, TT_GTE, TT_EE, TT_NE)))
+        if res.error:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end, "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
+
+        return res.success(node)
+
     def expr(self):
         res = ParseResult()
         if self.current_tok.matches(TT_KEYWORD, 'var'):
@@ -385,11 +495,12 @@ class Parser:
                 return res
             return res.success(VarAssignNode(var_name, expr))
 
-        node = res.register(self.bin_op(self.term, (TT_PLUS, TT_MINUS)))
+        node = res.register(self.bin_op(self.compare_expr,
+                            ((TT_KEYWORD, "<33"), (TT_KEYWORD, "<3"))))
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "(ó﹏ò｡) I expected 'var', int, float, identifier, '+', '-' or '('"))
+                "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
 
         return res.success(node)
 
@@ -401,7 +512,7 @@ class Parser:
         if res.error:
             return res
 
-        while self.current_tok.type in ops:
+        while self.current_tok is not None and (self.current_tok.type in ops or (self.current_tok.type, self.current_tok.value) in ops):
             op_tok = self.current_tok
             res.register_advancement()
             self.advance()
@@ -410,9 +521,12 @@ class Parser:
                 return res
             left = BinOpNode(left, op_tok, right)
         return res.success(left)
+# - end of Parser Class - #
+################################
 
 
-# ✧･ﾟ: *✧･ﾟ:* Runtime Classes *:･ﾟ✧*:･ﾟ✧
+################################
+# ✧･ﾟ: *✧･ﾟ:* Runtime *:･ﾟ✧*:･ﾟ✧
 class RuntimeResult:
     def __init__(self):
         self.value = None
@@ -430,8 +544,12 @@ class RuntimeResult:
     def failure(self, error):
         self.error = error
         return self
+# - end of RuntimeResult Class - #
+################################
 
 
+################################
+# ⋆ ˚｡⋆୨୧˚ Number Class ˚｡⋆ ⋆୨୧˚
 class Number:
     def __init__(self, value):
         self.value = value
@@ -471,6 +589,41 @@ class Number:
         if isinstance(other, Number):
             return Number(self.value ** other.value).set_context(self.context), None
 
+    def get_comparison_eq(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value == other.value else 'Nuh uh').set_context(self.context), None
+
+    def get_comparison_ne(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value != other.value else 'Nuh uh').set_context(self.context), None
+
+    def get_comparison_lt(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value < other.value else 'Nuh uh').set_context(self.context), None
+
+    def get_comparison_gt(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value > other.value else 'Nuh uh').set_context(self.context), None
+
+    def get_comparison_lte(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value <= other.value else 'Nuh uh').set_context(self.context), None
+
+    def get_comparison_gte(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value >= other.value else 'Nuh uh').set_context(self.context), None
+
+    def anded_by(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value and other.value else 'Nuh uh').set_context(self.context), None
+
+    def ored_by(self, other):
+        if isinstance(other, Number):
+            return Number('Uh Huh' if self.value or other.value else 'Nuh uh').set_context(self.context), None
+
+    def notted(self):
+        return Number('Uh Huh' if self.value == 0 else 'Nuh uh').set_context(self.context), None
+
     def copy(self):
         copy = Number(self.value)
         copy.set_context(self.context)
@@ -479,9 +632,12 @@ class Number:
 
     def __repr__(self):
         return f'{self.value}'
+# - end of Number Class - #
+################################
 
 
-# ☆*:.｡.o(≧▽≦)o.｡.:*☆ Interpreter Class
+################################
+# ☆*:.｡.o(≧▽≦)o.｡.:*☆ Interpreter
 class Interpreter:
     def visit(self, node, context):
         method_name = f'visit_{type(node).__name__}'
@@ -532,6 +688,22 @@ class Interpreter:
             result, error = left.divided_by(right)
         elif node.op_tok.type == TT_POW:
             result, error = left.powered_by(right)
+        elif node.op_tok.type == TT_EE:
+            result, error = left.get_comparison_eq(right)
+        elif node.op_tok.type == TT_NE:
+            result, error = left.get_comparison_ne(right)
+        elif node.op_tok.type == TT_LT:
+            result, error = left.get_comparison_lt(right)
+        elif node.op_tok.type == TT_GT:
+            result, error = left.get_comparison_gt(right)
+        elif node.op_tok.type == TT_LTE:
+            result, error = left.get_comparison_lte(right)
+        elif node.op_tok.type == TT_GTE:
+            result, error = left.get_comparison_gte(right)
+        elif node.op_tok.matches(TT_KEYWORD, '<33'):
+            result, error = left.anded_by(right)
+        elif node.op_tok.matches(TT_KEYWORD, '<3'):
+            result, error = left.ored_by(right)
         if error:
             return res.failure(error)
         else:
@@ -548,21 +720,30 @@ class Interpreter:
             result, error = number.multed_by(Number(1))
         elif node.op_tok.type == TT_MINUS:
             result, error = number.multed_by(Number(-1))
+        elif node.op_tok.matches(TT_KEYWORD, '</3'):
+            number, error = number.notted()
         if error:
             return res.failure(error)
         else:
             return res.success(result.set_pos(node.pos_start, node.pos_end))
+# - end of Interpreter Class - #
+################################
 
 
-# ✿❀ Context Class ❀✿
+################################
+# ✿❀ Context ❀✿
 class Context:
     def __init__(self, dn, parent=None, parent_entry_pos=None):
         self.display_name = dn
         self.parent = parent
         self.parent_entry_pos = parent_entry_pos
         self.symbol_table = None
+# - end of Context Class - #
+################################
 
 
+################################
+# ⋆.ೃ࿔*:･ Symbol Table ೃ࿔*:･⋆
 class SymbolTable:
     def __init__(self):
         self.symbols = {}
@@ -579,13 +760,16 @@ class SymbolTable:
 
     def remove(self, name):
         del self.symbols[name]
+# - end of Symbol Table - #
+################################
 
 
-# (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Main Run Function
+################################
+# (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Run Function
 global_symbol_table = SymbolTable()
-global_symbol_table.set("NaN", 0)
-global_symbol_table.set("YAY", 1)
-global_symbol_table.set("NAY", 0)
+global_symbol_table.set("NaN", Number(0))
+global_symbol_table.set("YAY", Number(1))
+global_symbol_table.set("NAY", Number(0))
 
 
 def run(fn, text):
@@ -604,3 +788,4 @@ def run(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
     return result.value, result.error
+# - end of Run Function - #
