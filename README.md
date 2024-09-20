@@ -16,26 +16,27 @@
 - [Contributing](#contributing)
 - [License](#license)
 
-## Installation
+### 𝜗𝜚˚⋆ Installation
 
-## Getting Started
+### ݁˖ ❀ ⋆｡˚ Getting Started
 
-## Syntax Overview
+### 𖥸₊ ࣪˖⚘ ゛ Syntax Overview
 
-## Data Types
+### ₊˚⊹☆ Data Types
 
-## Control Structures
+### ˚｡𖦹 Control Structures
 
-## Built-in Functions
+### \*ੈ‧ 𓇼 ₊˚ Built-in Functions
 
-## Standard Library
+### ⋆.˚⚘⭒ Standard Library
 
-## Examples
+### ˚⋆ ⊹ ݁˖ Examples
 
-## Contributing
+### ˖ ࣪⊹༘ Contributing
 
-## License
+### ࿐ᯓᡣ𐭩 License
 
+made with ♡ by v1peridae
 ⠀⠀⠀⠀⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢴⣤⣄⠀⠀⠀⠀⠀⢀⣤⣶⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀
 ⢴⣾⣿⣿⣿⣏⣉⣉⣉⣛⣛⣻⣿⣶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠙⢷⠀⠀⠀⢠⡟⠀⠀⠀⠀⠀⠀⢀⣠⣤⣶⣾⣿⣛⣛⣋⣉⣉⣉⣿⣿⣿⣿⣶⠄
 ⠀⠙⢿⣿⣿⣿⡁⠀⠀⣉⡿⠋⠉⠉⠙⠛⠻⢿⣦⣄⠀⠀⠀⠀⠘⣇⠀⢀⡟⠀⠀⠀⠀⢀⣤⣾⠿⠛⠋⠉⠉⠉⠻⣏⡉⠀⠈⣹⣿⣿⣿⠟⠁⠀
