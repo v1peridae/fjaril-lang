@@ -54,7 +54,7 @@ class Error:
         self.error_name = error_name
         self.details = details
 
-    def as_string(self):
+    def format_error(self):
         result = f'{self.error_name}: {self.details}\n'
         result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}\n'
         result += string_with_arrows(
@@ -80,7 +80,7 @@ class RuntimeError(Error):
                          '(ノ﹏ヽ) Oh no! Runtime Error', details)
         self.context = context
 
-    def as_string(self):
+    def format_error(self):
         result = self.generate_traceback()
         result = f'{self.error_name}: {self.details}\n'
         result += string_with_arrows(
@@ -88,15 +88,15 @@ class RuntimeError(Error):
         return result
 
     def generate_traceback(self):
-        result = ''
-        pos = self.pos_start
-        context = self.context
+        traceback_msg = ''
+        current_pos = self.start_pos
+        Context = self.context
         while context:
-            result = f'  File {pos.fn}, line {
-                str(pos.ln + 1)}, in {context.display_name}\n' + result
-            pos = context.parent_entry_pos
+            traceback_msg = f"  At '{current_pos.fn}', line {
+                current_pos.ln + 1}, in function '{context.display_name}'\n" + traceback_msg
+            current_pos = context.parent_entry_pos
             context = context.parent
-        return '( ╹ -╹) \nTraceback (most recent call last):\n' + result
+        return '( ╹-╹ )\nTraceback (most recent call last):\n' + traceback_msg
 # - end of errors :( - #
 ################################
 
@@ -120,7 +120,7 @@ class Position:
             self.col = 0
         return self
 
-    def copy(self):
+    def clone(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
 # - end of Position Class - #
 ################################
@@ -136,8 +136,8 @@ class KawaiiToken:
         self.pos_end = pos_end
 
         if pos_start:
-            self.pos_start = pos_start.copy()
-            self.pos_end = pos_start.copy()
+            self.pos_start = pos_start.clone()
+            self.pos_end = pos_start.clone()
             self.pos_end.advance()
 
         if pos_end:
@@ -206,7 +206,7 @@ class CyuteLexer:
             elif self.current_char in LETTERS:
                 tokens.append(self.make_id())
             else:
-                pos_start = self.pos.copy()
+                pos_start = self.pos.clone()
                 char = self.current_char
                 self.advance()
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
@@ -215,7 +215,7 @@ class CyuteLexer:
 
     def make_equals(self):
         tok_type = TT_EQ
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
         self.advance()
 
         if self.current_char == '=':
@@ -227,7 +227,7 @@ class CyuteLexer:
     def make_number(self):
         num_str = ''
         dot_count = 0
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
 
         while self.current_char is not None and (self.current_char in DIGITS or self.current_char == '.'):
             if self.current_char == '.':
@@ -246,7 +246,7 @@ class CyuteLexer:
 
     def make_id(self):
         id_str = ''
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
 
         while self.current_char is not None and self.current_char in LETTERS_DIGITS + '_':
             id_str += self.current_char
@@ -256,7 +256,7 @@ class CyuteLexer:
         return KawaiiToken(tok_type, id_str, pos_start, self.pos)
 
     def make_not_equals(self):
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
         self.advance()
 
         if self.current_char == '>':
@@ -267,7 +267,7 @@ class CyuteLexer:
 
     def make_equals(self):
         tok_type = TT_EQ
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
         self.advance()
 
         if self.current_char == '=':
@@ -278,7 +278,7 @@ class CyuteLexer:
 
     def make_less_than(self):
         tok_type = TT_LT
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
         self.advance()
         if self.current_char == '=':
             self.advance()
@@ -290,7 +290,7 @@ class CyuteLexer:
 
     def make_greater_than(self):
         tok_type = TT_GT
-        pos_start = self.pos.copy()
+        pos_start = self.pos.clone()
         self.advance()
         if self.current_char == '=':
             self.advance()
@@ -629,11 +629,11 @@ class Number:
     def notted(self):
         return Number('Uh Huh' if self.value == 0 else 'Nuh uh').set_context(self.context), None
 
-    def copy(self):
-        copy = Number(self.value)
-        copy.set_context(self.context)
-        copy.set_pos(self.pos_start, self.pos_end)
-        return copy
+    def clone(self):
+        clone = Number(self.value)
+        clone.set_context(self.context)
+        clone.set_pos(self.pos_start, self.pos_end)
+        return clone
 
     def __repr__(self):
         return f'{self.value}'
@@ -662,7 +662,7 @@ class Interpreter:
         value = context.symbol_table.get(var_name)
         if not value:
             return res.failure(RuntimeError(node.pos_start, node.pos_end, f'(´｡• ω •｡`) {var_name} isn\'t defined', context))
-        value = value.copy().set_pos(node.pos_start, node.pos_end)
+        value = value.clone().set_pos(node.pos_start, node.pos_end)
         return res.success(value)
 
     def visit_VarAssignNode(self, node, context):
