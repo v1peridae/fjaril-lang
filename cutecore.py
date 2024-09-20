@@ -1,15 +1,15 @@
 from string_with_arrows import string_with_arrows
 
-# tokeniess >.<
-TT_INT = 'NUM'
-TT_FLOAT = 'KINDA_NUM'
-TT_PLUS = 'PLUS(HIE)'
-TT_MINUS = 'MINUS'
-TT_MUL = 'TIMES'
-TT_DIV = 'SLASH'
-TT_LPAREN = 'LEFT_PAW'
-TT_RPAREN = 'RIGHT_PAW'
-TT_EOF = 'EOF'
+# Token types ✧˖°
+TT_INT = '✧ NUM ✧'
+TT_FLOAT = '★,KINDA_NUM★'
+TT_PLUS = '･ﾟ☆ PLUS(HIE) ☆･ﾟ'
+TT_MINUS = '✧ MINUS ✧'
+TT_MUL = '･ﾟ★ TIMES ★･ﾟ'
+TT_DIV = '･ﾟ★ SLASH ★･ﾟ'
+TT_LPAREN = '*:･ﾟ LEFT_PAW *:･ﾟ'
+TT_RPAREN = '*:･ﾟ RIGHT_PAW *:･ﾟ'
+TT_EOF = '✿ EOF ✿'
 
 
 # const >.<
@@ -37,13 +37,38 @@ class Error:
 class IllegalCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end,
-                         '( • ᴖ • ｡) We found a mischief character, you can\'t use that ', details)
+                         '(◕︿◕✿) Oopsie! We found a mischief character', details)
 
 
 class InvalidSyntaxError(Error):
     def __init__(self, pos_start, pos_end, details=''):
         super().__init__(pos_start, pos_end,
-                         '૮・ᵔ・ა Wrong syntax ', details)
+                         '(´｡• ω •｡`) Uh-oh! Wrong syntax', details)
+
+
+class RuntimeError(Error):
+    def __init__(self, pos_start, pos_end, details, context):
+        super().__init__(pos_start, pos_end,
+                         '(ノ﹏ヽ) Oh no! Runtime Error', details)
+        self.context = context
+
+    def as_string(self):
+        result = self.generate_traceback()
+        result = f'{self.error_name}: {self.details}\n'
+        result += string_with_arrows(
+            self.pos_start.ftxt, self.pos_start, self.pos_end)
+        return result
+
+    def generate_traceback(self):
+        result = ''
+        pos = self.pos_start
+        context = self.context
+        while context:
+            result = f'  File {pos.fn}, line {
+                str(pos.ln + 1)}, in {context.display_name}\n' + result
+            pos = context.parent_entry_pos
+            context = context.parent
+        return '( ╹ -╹) \nTraceback (most recent call last):\n' + result
 
 
 # - end of errors :( - #
@@ -88,9 +113,11 @@ class KawaiiToken:
 
     def __repr__(self):
         if self.value:
-            return f'{self.type}:{self.value}'
-        return f'{self.type}'
+            return f'✧･ﾟ: *✧･ﾟ:{self.type}:{self.value}:･ﾟ✧*:･ﾟ✧'
+        return f'✧･ﾟ: *✧･ﾟ:{self.type}:･ﾟ✧*:･ﾟ✧'
 # - end of class KawaiiToken - #
+
+# Lexer ✧˖°
 
 
 class CyuteLexer:
@@ -158,13 +185,15 @@ class CyuteLexer:
             return KawaiiToken(TT_INT, int(num_str), pos_start, self.pos)
         else:
             return KawaiiToken(TT_FLOAT, float(num_str), pos_start, self.pos)
-
+# - end of Lexer ✧˖° - #
 # nodes >.<
 
 
 class NumberNode:
     def __init__(self, tok):
         self.tok = tok
+        self.pos_start = self.tok.pos_start
+        self.pos_end = self.tok.pos_end
 
     def __repr__(self):
         return f'{self.tok}'
@@ -175,6 +204,8 @@ class BinOpNode:
         self.left_node = left_node
         self.op_tok = op_tok
         self.right_node = right_node
+        self.pos_start = self.left_node.pos_start
+        self.pos_end = self.right_node.pos_end
 
     def __repr__(self):
         return f'({self.left_node}, {self.op_tok}, {self.right_node})'
@@ -184,6 +215,8 @@ class UnaryOpNode:
     def __init__(self, op_tok, node):
         self.op_tok = op_tok
         self.node = node
+        self.pos_start = self.op_tok.pos_start
+        self.pos_end = self.node.pos_end
 
     def __repr__(self):
         return f'({self.op_tok}, {self.node})'
@@ -262,7 +295,7 @@ class Parser:
 
             return res.success(NumberNode(tok))
         return res.failure(InvalidSyntaxError(
-            self.current_tok.pos_start, self.current_tok.pos_end, "(ó﹏ò｡) I- I expected a number"))
+            self.current_tok.pos_start, self.current_tok.pos_end, "(ó﹏ò｡) I expected a number"))
 
     def bin_op(self, func, ops):
         res = ParseResult()
@@ -285,6 +318,123 @@ class Parser:
         return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
 
+class RuntimeResult:
+    def __init__(self):
+        self.value = None
+        self.error = None
+
+    def register(self, res):
+        if res.error:
+            self.error = res.error
+        return res.value
+
+    def success(self, value):
+        self.value = value
+        return self
+
+    def failure(self, error):
+        self.error = error
+        return self
+
+
+class Number:
+    def __init__(self, value):
+        self.value = value
+        self.set_pos()
+        self.set_context()
+
+    def set_pos(self, pos_start=None, pos_end=None):
+        self.pos_start = pos_start
+        self.pos_end = pos_end
+
+        return self
+
+    def added_to(self, other):
+        if isinstance(other, Number):
+            return Number(self.value + other.value).set_context(self.context), None
+
+    def subbed_by(self, other):
+        if isinstance(other, Number):
+            return Number(self.value - other.value).set_context(self.context), None
+
+    def multed_by(self, other):
+        if isinstance(other, Number):
+            return Number(self.value * other.value).set_context(self.context), None
+
+    def set_context(self, context=None):
+        self.context = context
+        return self
+
+    def divided_by(self, other):
+        if isinstance(other, Number):
+            if other.value == 0:
+                return None, RuntimeError(
+                    other.pos_start, other.pos_end, '【・_・?】You can\'t divide by zero', self.context)
+            return Number(self.value / other.value), None
+
+    def __repr__(self):
+        return f'{self.value}'
+
+
+class Interpreter:
+    def visit(self, node, context):
+        method_name = f'visit_{type(node).__name__}'
+        method = getattr(self, method_name, self.no_visit_method)
+        return method(node, context)
+
+    def no_visit_method(self, node, context):
+        raise Exception(f'No visit_{type(node).__name__} method defined')
+
+    def visit_NumberNode(self, node, context):
+        return RuntimeResult().success(
+            Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+
+    def visit_BinOpNode(self, node, context):
+        res = RuntimeResult()
+        left = res.register(self.visit(node.left_node, context))
+        if res.error:
+            return res
+        right = res.register(self.visit(node.right_node, context))
+        if res.error:
+            return res
+
+        if node.op_tok.type == TT_PLUS:
+            result, error = left.added_to(right)
+        elif node.op_tok.type == TT_MINUS:
+            result, error = left.subbed_by(right)
+        elif node.op_tok.type == TT_MUL:
+            result, error = left.multed_by(right)
+        elif node.op_tok.type == TT_DIV:
+            result, error = left.divided_by(right)
+        if error:
+            return res.failure(error)
+        else:
+            return res.success(result.set_pos(node.pos_start, node.pos_end))
+
+    def visit_UnaryOpNode(self, node, context):
+        res = RuntimeResult()
+        number = res.register(self.visit(node.node, context))
+        if res.error:
+            return res
+
+        error = None
+        if node.op_tok.type == TT_PLUS:
+            result, error = number.multed_by(Number(1))
+        elif node.op_tok.type == TT_MINUS:
+            result, error = number.multed_by(Number(-1))
+        if error:
+            return res.failure(error)
+        else:
+            return res.success(result.set_pos(node.pos_start, node.pos_end))
+
+
+class Context:
+    def __init__(self, dn, parent=None, parent_entry_pos=None):
+        self.display_name = dn
+        self.parent = parent
+        self.parent_entry_pos = parent_entry_pos
+
+
 def run(fn, text):
     lexer = CyuteLexer(fn, text)
     tokens, error = lexer.make_tokens()
@@ -293,4 +443,10 @@ def run(fn, text):
 
     parser = Parser(tokens)
     ast = parser.parse()
-    return ast.node, ast.error
+    if ast.error:
+        return None, ast.error
+
+    interpreter = Interpreter()
+    context = Context('<program>')
+    result = interpreter.visit(ast.node, context)
+    return result.value, result.error
