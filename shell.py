@@ -1,8 +1,8 @@
-import cutecore
+import fjaril
 
 while True:
-    text = input('cutecore >>>')
-    result, error = cutecore.run('<stdin>', text)
+    text = input('fjaril >>> ')
+    result, error = fjaril.run('<stdin>', text)
 
     if error:
         print(error.as_string())
