@@ -2,26 +2,12 @@
 
 **Fjäril** (Swedish for _butterfly_) is a cute little open-source programming language designed to make coding a little more unique! Inspired by the lightness and uniqueness of butterflies, we hope Fjäril makes you feel like you can express yourself more with code. Whether you're into pastel colours or cutesy syntax, Fjäril helps you code in a way that feels uniquely like _you_.
 
-## Table of Contents
-
-- [Installation](#installation)
-- [Getting Started](#getting-started)
-- [Syntax Overview](#syntax-overview)
-- [Data Types](#data-types)
-- [Control Structures](#control-structures)
-- [Functions](#functions)
-- [Built-in Functions](#built-in-functions)
-- [Standard Library](#standard-library)
-- [Examples](#examples)
-- [Contributing](#contributing)
-- [License](#license)
-
+<br>
 ### 𝜗𝜚˚⋆ Installation
-
+<br>
 ### ݁˖ ❀ ⋆｡˚ Getting Started
-
+<br>
 ### 𖥸₊ ࣪˖⚘ ゛ Syntax Overview
-
 - Basic arithmetic operators: - Plus (+) : 2 + 4 - Minus (-) : 9 - 3 - Multiply By (\*) : 5\*2 - Divide By (/) : 12/6 - Power (^) : 3^2
   <br>
 - Comparison operators: - Equal To (==) : 9 == 9 - Not Equal (<>) : 7 <> 2 - Less Than (<) : x < y - Greater Than (>) : 12 > 3 - Less Than Or Equal To (<=) : group_a <= group_b - Greater Than Or Equal To (>=) 14 >= 11
