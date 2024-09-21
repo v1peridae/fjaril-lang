@@ -31,8 +31,7 @@ TT_EE = '⧣₊˚ DOUBLE_EQUAL ⧣₊˚'
 
 ################################
 # ✿ KEYWORDS ✿
-KEYWORDS = ['var', '<33', '<3', '</3', 'if', 'elif',
-            'else', 'for', 'to', 'step', 'while', 'fun', 'then']
+KEYWORDS = ['var', '<33', '<3', '</3', 'if', 'elif', 'else']
 ################################
 
 
@@ -54,7 +53,7 @@ class Error:
         self.error_name = error_name
         self.details = details
 
-    def format_error(self):
+    def as_string(self):
         result = f'{self.error_name}: {self.details}\n'
         result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}\n'
         result += string_with_arrows(
@@ -74,13 +73,19 @@ class InvalidSyntaxError(Error):
                          '(´｡• ω •｡`) Uh-oh! Wrong syntax', details)
 
 
+class ExpectedCharError(Error):
+    def __init__(self, pos_start, pos_end, details=''):
+        super().__init__(pos_start, pos_end,
+                         '(ó﹏ò｡) I expected a character', details)
+
+
 class RuntimeError(Error):
     def __init__(self, pos_start, pos_end, details, context):
         super().__init__(pos_start, pos_end,
                          '(ノ﹏ヽ) Oh no! Runtime Error', details)
         self.context = context
 
-    def format_error(self):
+    def as_string(self):
         result = self.generate_traceback()
         result = f'{self.error_name}: {self.details}\n'
         result += string_with_arrows(
@@ -88,15 +93,15 @@ class RuntimeError(Error):
         return result
 
     def generate_traceback(self):
-        traceback_msg = ''
-        current_pos = self.start_pos
-        Context = self.context
+        result = ''
+        pos = self.pos_start
+        context = self.context
         while context:
-            traceback_msg = f"  At '{current_pos.fn}', line {
-                current_pos.ln + 1}, in function '{context.display_name}'\n" + traceback_msg
-            current_pos = context.parent_entry_pos
+            result = f'  File {pos.fn}, line {
+                str(pos.ln + 1)}, in {context.display_name}\n' + result
+            pos = context.parent_entry_pos
             context = context.parent
-        return '( ╹-╹ )\nTraceback (most recent call last):\n' + traceback_msg
+        return '( ╹ -╹) \nTraceback (most recent call last):\n' + result
 # - end of errors :( - #
 ################################
 
@@ -118,9 +123,10 @@ class Position:
         if current_char == '\n':
             self.ln += 1
             self.col = 0
+
         return self
 
-    def clone(self):
+    def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
 # - end of Position Class - #
 ################################
@@ -136,12 +142,12 @@ class KawaiiToken:
         self.pos_end = pos_end
 
         if pos_start:
-            self.pos_start = pos_start.clone()
-            self.pos_end = pos_start.clone()
+            self.pos_start = pos_start.copy()
+            self.pos_end = pos_start.copy()
             self.pos_end.advance()
 
         if pos_end:
-            self.pos_end = pos_end
+            self.pos_end = pos_end.copy()
 
     def matches(self, type_, value):
         return self.type == type_ and self.value == value
@@ -174,7 +180,7 @@ class CyuteLexer:
         while self.current_char is not None:
             if self.current_char in ' \t':
                 self.advance()
-            elif self.current_char in DIGITS or self.current_char == '.':
+            elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
             elif self.current_char == '+':
                 tokens.append(KawaiiToken(TT_PLUS, pos_start=self.pos))
@@ -206,7 +212,7 @@ class CyuteLexer:
             elif self.current_char in LETTERS:
                 tokens.append(self.make_id())
             else:
-                pos_start = self.pos.clone()
+                pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
@@ -215,7 +221,7 @@ class CyuteLexer:
 
     def make_equals(self):
         tok_type = TT_EQ
-        pos_start = self.pos.clone()
+        pos_start = self.pos.copy()
         self.advance()
 
         if self.current_char == '=':
@@ -227,7 +233,7 @@ class CyuteLexer:
     def make_number(self):
         num_str = ''
         dot_count = 0
-        pos_start = self.pos.clone()
+        pos_start = self.pos.copy()
 
         while self.current_char is not None and (self.current_char in DIGITS or self.current_char == '.'):
             if self.current_char == '.':
@@ -246,7 +252,7 @@ class CyuteLexer:
 
     def make_id(self):
         id_str = ''
-        pos_start = self.pos.clone()
+        pos_start = self.pos.copy()
 
         while self.current_char is not None and self.current_char in LETTERS_DIGITS + '_':
             id_str += self.current_char
@@ -256,7 +262,7 @@ class CyuteLexer:
         return KawaiiToken(tok_type, id_str, pos_start, self.pos)
 
     def make_not_equals(self):
-        pos_start = self.pos.clone()
+        pos_start = self.pos.copy()
         self.advance()
 
         if self.current_char == '>':
@@ -265,20 +271,9 @@ class CyuteLexer:
         self.advance()
         return None, InvalidSyntaxError(pos_start, self.pos, "(ó﹏ò｡) I expected a '>' after '<'")
 
-    def make_equals(self):
-        tok_type = TT_EQ
-        pos_start = self.pos.clone()
-        self.advance()
-
-        if self.current_char == '=':
-            self.advance()
-            tok_type = TT_EE
-
-            return KawaiiToken(tok_type, pos_start=pos_start, pos_end=self.pos)
-
     def make_less_than(self):
         tok_type = TT_LT
-        pos_start = self.pos.clone()
+        pos_start = self.pos.copy()
         self.advance()
         if self.current_char == '=':
             self.advance()
@@ -290,7 +285,7 @@ class CyuteLexer:
 
     def make_greater_than(self):
         tok_type = TT_GT
-        pos_start = self.pos.clone()
+        pos_start = self.pos.copy()
         self.advance()
         if self.current_char == '=':
             self.advance()
@@ -389,9 +384,11 @@ class Parser:
         self.tok_idx = -1
         self.advance()
 
-    def advance(self):
+    def advance(self, ):
         self.tok_idx += 1
-        self.update_current_tok()
+        if self.tok_idx < len(self.tokens):
+            self.current_tok = self.tokens[self.tok_idx]
+        return self.current_tok
 
     def update_current_tok(self):
         if self.tok_idx < len(self.tokens):
@@ -401,10 +398,9 @@ class Parser:
 
     def parse(self):
         res = self.expr()
-        if not res.error and self.current_tok and self.current_tok.type != TT_EOF:
+        if not res.error and self.current_tok.type is not TT_EOF:
             return res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
+                self.current_tok.pos_start, self.current_tok.pos_end, "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
         return res
 
     def nachos(self):
@@ -463,20 +459,22 @@ class Parser:
 
     def compare_expr(self):
         res = ParseResult()
-        if self.current_tok.matches(TT_KEYWORD, '</3'):
+        if self.current_tok.matches(TT_KEYWORD, 'NOT'):
             op_tok = self.current_tok
             res.register_advancement()
             self.advance()
+
             node = res.register(self.compare_expr())
             if res.error:
                 return res
             return res.success(UnaryOpNode(op_tok, node))
         node = res.register(self.bin_op(
-            self.math_expr, (TT_LT, TT_GT, TT_LTE, TT_GTE, TT_EE, TT_NE)))
+            self.math_expr, (TT_EE, TT_NE, TT_LT, TT_GT, TT_LTE, TT_GTE)))
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "(ó﹏ò｡) I expected a number, identifier, operator or parenthesis"))
+                "Expected int, float, identifier, '+', '-', '(' or 'NOT'"
+            ))
         return res.success(node)
 
     def expr(self):
@@ -484,15 +482,23 @@ class Parser:
         if self.current_tok.matches(TT_KEYWORD, 'var'):
             res.register_advancement()
             self.advance()
+
             if self.current_tok.type != TT_ID:
                 return res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end, '(ó﹏ò｡) I expected an identifier'))
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected identifier"
+                ))
+
             var_name = self.current_tok
             res.register_advancement()
             self.advance()
+
             if self.current_tok.type != TT_EQ:
                 return res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end, '(ó﹏ò｡) I expected an ='))
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+
             res.register_advancement()
             self.advance()
             expr = res.register(self.expr())
@@ -500,8 +506,8 @@ class Parser:
                 return res
             return res.success(VarAssignNode(var_name, expr))
 
-        node = res.register(self.bin_op(self.compare_expr,
-                            ((TT_KEYWORD, "<33"), (TT_KEYWORD, "<3"))))
+        node = res.register(self.bin_op(
+            self.compare_expr, ((TT_KEYWORD, 'AND'), (TT_KEYWORD, 'OR'))))
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
@@ -517,7 +523,7 @@ class Parser:
         if res.error:
             return res
 
-        while self.current_tok is not None and (self.current_tok.type in ops or (self.current_tok.type, self.current_tok.value) in ops):
+        while self.current_tok.type in ops or (self.current_tok.type, self.current_tok.value) in ops:
             op_tok = self.current_tok
             res.register_advancement()
             self.advance()
@@ -629,11 +635,11 @@ class Number:
     def notted(self):
         return Number('Uh Huh' if self.value == 0 else 'Nuh uh').set_context(self.context), None
 
-    def clone(self):
-        clone = Number(self.value)
-        clone.set_context(self.context)
-        clone.set_pos(self.pos_start, self.pos_end)
-        return clone
+    def copy(self):
+        copy = Number(self.value)
+        copy.set_context(self.context)
+        copy.set_pos(self.pos_start, self.pos_end)
+        return copy
 
     def __repr__(self):
         return f'{self.value}'
@@ -654,15 +660,18 @@ class Interpreter:
 
     def visit_NumberNode(self, node, context):
         return RuntimeResult().success(
-            Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+            Number(node.tok.value).set_context(
+                context).set_pos(node.pos_start, node.pos_end)
+        )
 
     def visit_VarAccessNode(self, node, context):
         res = RuntimeResult()
         var_name = node.var_name_tok.value
         value = context.symbol_table.get(var_name)
+
         if not value:
             return res.failure(RuntimeError(node.pos_start, node.pos_end, f'(´｡• ω •｡`) {var_name} isn\'t defined', context))
-        value = value.clone().set_pos(node.pos_start, node.pos_end)
+        value = value.copy().set_pos(node.pos_start, node.pos_end)
         return res.success(value)
 
     def visit_VarAssignNode(self, node, context):
@@ -778,10 +787,6 @@ global_symbol_table.set("NAY", Number(0))
 
 
 def run(fn, text):
-    if fn.endswith('.owo'):
-        with open(fn, 'r') as file:
-            text = file.read()
-
     lexer = CyuteLexer(fn, text)
     tokens, error = lexer.make_tokens()
     if error:
