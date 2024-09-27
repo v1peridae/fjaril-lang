@@ -8,11 +8,11 @@
 <br>
 
 ### 𝜗𝜚˚⋆ Installation
-
-<br>
-
-### ݁˖ ❀ ⋆｡˚ Getting Started
-
+1. You wanna download this repo.
+2. You want to then wanna open CMD then cd into the file.
+3. After that you wanna run ` python shell.py `
+4. You can now use it yippie! (you should see `fjaril >>>`
+<br><br>Please note that for now multi-line code IS NOT supported but will be added by Wednesday of next week :) 
 <br>
 
 ### 𖥸₊ ࣪˖⚘ ゛ Syntax Overview
@@ -44,12 +44,11 @@
 
 - Numbers (integers and floats)
 - Booleans ("Uh Huh" for True and "Nuh uh" for False)
-- Strings (coming soon...)
-  <br>
+- Strings ("string")
+- Lists ({1,2,3,4})  <br>
 
 ### \*ੈ‧ 𓇼 ₊˚ Built-in Functions
-
-- Currently no built-in functions implemented (coming soon...)
+- (coming soon)
   <br>
 
 ### ⋆.˚⚘⭒ Standard Library
